@@ -1,205 +1,251 @@
-# Midterm Challenge Report: Parts 1–3
+# DS542 Midterm Challenge Report: Parts 1–3
+
+**Student Name:** Zhamshidbek Abdulkhamidov
+**Kaggle Username:** zhamshidbekabdul
+**GitHub Repository:** https://github.com/dl4ds-gh-classroom/dl4ds-spring-2025-midterm-challenge-bulkhamid/
 
 ## 1. AI Disclosure
 
-**AI Assistance:**
-- **ChatGPT:** Used to help generate the initial draft of this report, suggest improvements for structuring text and code comments, and to provide ideas on experiment analysis.
-- **GitHub Copilot:** Assisted with autocomplete suggestions during code development.
+*   **AI Tools Used:**
+    *   **ChatGPT:** Utilized for generating the initial structure of this report, refining wording and explanations, suggesting improvements for code comments, and providing ideas for analyzing experimental results. For example, asked for different ways to explain transfer learning justification.
+    *   **GitHub Copilot:** Employed during code development primarily for autocompletion of boilerplate code (e.g., standard PyTorch training loops, data loading setup) and suggesting common code patterns. For example, used Copilot suggestions for the structure of the train/validate functions.
 
-**Code Contributions:**
-- **Written by Me:**
-  - Overall project structure and integration of all three parts.
-  - Manual implementation of the SimpleCNN model (Part 1).
-  - Design of the experiments, hyperparameter tuning, and integration of evaluation functions.
-  - Detailed analysis of results and discussion sections.
-- **Assisted by AI:**
-  - Initial drafts for various sections of the report.
-  - Suggestions for organizing experiment tracking summaries and detailed code comments.
+*   **Code Contributions:**
+    *   **Primarily Written by Me:**
+        *   The specific architecture definition for the `SimpleCNN` in `simple_cnn.py`.
+        *   The selection and adaptation logic for the pretrained models (`ResNet50` in `part2.py`, `EfficientNet_B0` in `part3.py`), including the modification of classifier heads.
+        *   The overall experimental design, including the choice of hyperparameters ranges to explore (even if initial values were standard), data augmentation strategies, and the integration of training, validation, and evaluation components across the three parts.
+        *   Debugging and troubleshooting issues encountered during training and evaluation.
+        *   The specific analysis and interpretation of results presented in this report.
+        *   Manual tuning adjustments based on WandB observations.
+    *   **Assisted by AI:**
+        *   Autocomplete suggestions for PyTorch functions and module names via Copilot.
+        *   Refinement of code comments for clarity, based on suggestions or examples.
+        *   Drafting sections of this report (like this one), which were then reviewed, edited, and filled with specific details by me.
 
-**Code Comments:**
-- Each Python file includes comprehensive comments explaining data loading, model definitions, training procedures, evaluation, and any modifications made to the pretrained models.
+*   **Code Comments:**
+    *   All Python code files (`simple_cnn.py`, `part2.py`, `part3.py`, `eval_*.py`) include detailed comments explaining the purpose of different code sections, including data loading, transformations, model definitions, layer functionalities, training procedures, evaluation logic, and hyperparameter choices.
+
+*I affirm that I understand the course policies regarding AI usage and that this disclosure accurately reflects the extent to which AI assistance was used in this assignment.*
 
 ---
 
 ## 2. Overview
 
-This project consists of three distinct parts:
+This project tackles the CIFAR-100 image classification challenge in three parts, progressively increasing model complexity and leveraging transfer learning. The primary goal is to build effective Convolutional Neural Network (CNN) models using PyTorch, track experiments using Weights & Biases (WandB), and achieve a performance benchmark on the Kaggle leaderboard using Out-of-Distribution (OOD) test data.
 
-- **Part 1: SimpleCNN**
-  - A manually defined convolutional neural network built from scratch using PyTorch. The model includes one convolutional layer, a ReLU activation, a pooling layer, and a fully connected layer for CIFAR-100 classification.
-
-- **Part 2: Sophisticated CNN (Pretrained ResNet-18)**
-  - Utilizes a pretrained ResNet-18 model from torchvision. The final fully connected layer is replaced to match the 100 classes in CIFAR-100, leveraging transfer learning to improve performance.
-
-- **Part 3: Transfer Learning & Fine-Tuning**
-  - Further fine-tunes the pretrained model from EfficientNet_B0. This phase includes advanced data augmentation, early stopping, and learning rate scheduling to achieve superior performance on CIFAR-100.
+*   **Part 1:** A baseline `SimpleCNN` is implemented and trained to establish a foundational pipeline and initial performance metric.
+*   **Part 2:** A more sophisticated pretrained model (`ResNet-50`) from `torchvision` is adapted and fine-tuned on CIFAR-100 using improved hyperparameters and augmentation (originally ResNet-18 was planned, but ResNet-50 was used in the final `part2_improved.py`).
+*   **Part 3:** Transfer learning is employed more aggressively using `EfficientNet-B0`, aiming to surpass the Kaggle leaderboard benchmark of 0.397 through extensive fine-tuning, advanced data augmentation, and hyperparameter optimization.
 
 ---
 
 ## 3. Model Descriptions
 
-### Part 1 – SimpleCNN
-- **Architecture:**
-  - **Convolution Layer:** 16 filters with a 3×3 kernel, processing 3-channel input images.
-  - **Activation:** ReLU to introduce non-linearity.
-  - **Pooling:** Max Pooling to reduce spatial dimensions.
-  - **Fully Connected Layer:** Flattens the output and maps it to 100 classes.
-- **Justification:**  
-  This model establishes a baseline and demonstrates a fundamental understanding of building a CNN from scratch.
+### Part 1 – SimpleCNN (`simple_cnn.py`)
 
-### Part 2 – Sophisticated CNN (Pretrained ResNet-18)
-- **Architecture:**
-  - A ResNet-18 model pretrained on ImageNet is used.
-  - The final fully connected layer is replaced with a new linear layer outputting 100 classes.
-- **Justification:**  
-  - **Transfer Learning:** Leverages robust features learned from a large dataset (ImageNet).
-  - **Residual Learning:** Incorporates skip connections to enable the training of deeper networks.
-  - **Efficiency:** Balances performance with computational demands.
+*   **Architecture:** A basic CNN built from scratch.
+    *   `Conv2d`: Input channels: 3, Output channels: 16, Kernel size: 3x3, Padding: 1. (Takes 32x32x3 input).
+    *   `ReLU`: Activation function.
+    *   `MaxPool2d`: Kernel size: 2x2, Stride: 2. (Reduces spatial dimensions to 16x16).
+    *   `Flatten`: Reshapes the feature map for the linear layer.
+    *   `Linear`: Input features: 16 * 16 * 16 = 4096, Output features: 100 (for CIFAR-100 classes).
+*   **Justification:** This model serves as a minimal working example to verify the data loading, training, and evaluation pipeline. Its simplicity provides a clear baseline against which more complex models can be compared. It demonstrates fundamental CNN components (convolution, activation, pooling, fully connected layer).
 
-### Part 3 – Transfer Learning & Fine-Tuning
-- **Architecture:**
-  - An EfficientNet_B0 model pretrained on ImageNet. The classifier was modified by replacing the last linear layer to match the 100 classes of CIFAR-100.
-  - Includes aggressive data augmentation, early stopping, and learning rate scheduling.
-- **Design Rationale:**  
-  EfficientNet_B0 has shown state-of-the-art performance on various image recognition tasks. Its compound scaling approach helps achieve a good balance between accuracy and computational efficiency. The input images were resized to 224×224 to align with the model’s expectations, and ImageNet normalization was applied
+### Part 2 – Sophisticated CNN (Pretrained ResNet-50 in `part2.py`)
+
+*   **Architecture:** Utilizes `torchvision.models.resnet50(weights=ResNet50_Weights.DEFAULT)`.
+    *   **Base:** ResNet-50 architecture pretrained on ImageNet. Deeper than ResNet-18, containing more convolutional layers, batch normalization, ReLU activations, and residual connections organized into bottleneck blocks.
+    *   **Modification:** The original final fully connected layer (`fc`), which outputs 1000 classes for ImageNet, is replaced with a new `nn.Sequential` layer containing `nn.Dropout(p=0.5)`, `nn.BatchNorm1d(in_features)`, and `nn.Linear(in_features, 100)` (where `in_features=2048` for ResNet-50).
+*   **Justification:**
+    *   **Transfer Learning:** Leverages features learned on the large-scale ImageNet dataset.
+    *   **Deeper Architecture:** ResNet-50's increased depth allows for potentially learning more complex feature hierarchies compared to ResNet-18 or the SimpleCNN.
+    *   **Proven Performance:** ResNet-50 is a widely used and strong baseline architecture for many computer vision tasks. The added Dropout and BatchNorm in the head aim to improve regularization for fine-tuning.
+
+### Part 3 – Transfer Learning & Fine-Tuning (EfficientNet-B0 in `part3.py`)
+
+*   **Architecture:** Utilizes `torchvision.models.efficientnet_b0(weights=EfficientNet_B0_Weights.DEFAULT)`.
+    *   **Base:** EfficientNet-B0 architecture pretrained on ImageNet. Uses compound scaling and mobile inverted bottleneck convolutions (MBConv).
+    *   **Modification:** The original classifier's final linear layer (`classifier[1]`) is replaced with a new `nn.Linear` layer with 1280 input features and 100 output features (for CIFAR-100 classes).
+    *   **Input Resizing:** CIFAR-100 images (32x32) are resized to 224x224 during data transformation.
+*   **Justification:**
+    *   **State-of-the-Art Efficiency:** EfficientNet models aim for a better balance of accuracy and computational cost compared to older architectures like ResNet at similar performance levels.
+    *   **Compound Scaling:** The design principle potentially leads to better feature extraction for a given computational budget.
+    *   **Transfer Learning:** Leverages robust features learned from ImageNet, adapted for the CIFAR-100 task.
 
 ---
 
 ## 4. Hyperparameter Tuning
 
+Hyperparameters were selected based on common practices, prior experience, and refined through observation of training/validation metrics logged via WandB.
+
 ### Part 1 (SimpleCNN)
-- **Learning Rate:** 0.1 (baseline value)
-- **Batch Size:** 8 (determined via initial experimentation)
-- **Epochs:** 5 (for demonstrative purposes)
-- **Observations:**  
-  The SimpleCNN serves as a proof-of-concept, providing a reference point for more complex models.
 
-### Part 2 (ResNet-18)
-- **Learning Rate:** 0.01 with step decay (γ = 0.1 every 5 epochs)
-- **Batch Size:** 32
-- **Momentum:** 0.9
-- **Epochs:** 50 with early stopping (patience of 5 epochs)
-- **Observations:**  
-  Pretrained weights allow faster convergence; early stopping prevents overfitting.
+*   **Optimizer:** SGD (`optim.SGD`)
+*   **Learning Rate:** 0.01 (Initial rate, subject to scheduler)
+*   **Batch Size:** 32
+*   **Epochs:** 5
+*   **Scheduler:** StepLR, step_size=2, gamma=0.1
+*   **Process:** Initial values chosen for simplicity and pipeline verification. Limited epochs intended only for baseline establishment. WandB used to monitor basic trends.
 
-### Part 3 (Transfer Learning & Fine-Tuning)
-- **Modifications:**
-  - Continued fine-tuning with the same learning rate schedule.
-  - Additional data augmentation and minor hyperparameter adjustments based on validation performance.
-- **Observations:**  
-  Fine-tuning helps push the test accuracy beyond the baseline, balancing learning rate decay and regularization to mitigate overfitting.
+### Part 2 (ResNet-50 - `part2_improved.py`)
+
+*   **Optimizer:** AdamW (`optim.AdamW`)
+*   **Learning Rate:** 1e-4
+*   **Batch Size:** 32
+*   **Epochs:** 100 (max, with early stopping patience=10)
+*   **Scheduler:** CosineAnnealingLR (`optim.lr_scheduler.CosineAnnealingLR`)
+*   **Weight Decay:** 1e-4
+*   **MixUp Alpha:** 0.2
+*   **Dropout (Classifier Head):** 0.5
+*   **Process:** Switched to AdamW and a lower LR (1e-4) commonly used for fine-tuning. Employed Cosine Annealing for smoother LR decay. Introduced MixUp and increased classifier dropout for regularization. Used ImageNet normalization. Increased patience for early stopping. Monitored WandB to track convergence and the impact of regularization.
+
+### Part 3 (EfficientNet-B0 - `part3.py - UPDATED`)
+
+*   **Optimizer:** AdamW (`optim.AdamW`)
+*   **Learning Rate:** 1e-4
+*   **Batch Size:** 32
+*   **Epochs:** 100 (max, with early stopping patience=10)
+*   **Scheduler:** CosineAnnealingLR (`optim.lr_scheduler.CosineAnnealingLR`)
+*   **Weight Decay:** 1e-4
+*   **Label Smoothing:** 0.1
+*   **Process:** Further refined the approach from Part 2. Kept AdamW, Cosine Annealing, and the low LR. Added Label Smoothing as another regularization technique. Used more aggressive data augmentation (RandAugment, ColorJitter). WandB plots were critical for monitoring the complex interplay of augmentation, regularization, and optimization, aiming to maximize validation accuracy.
 
 ---
 
 ## 5. Regularization Techniques
 
-- **Early Stopping:**  
-  Training halts if the validation accuracy does not improve for 5 consecutive epochs to prevent overfitting.
+Several techniques were employed across the parts to combat overfitting and enhance model generalization:
 
-- **Data Augmentation:**  
-  - **Training Augmentations:** Random cropping (with 4-pixel padding) and random horizontal flipping.
-  - **Test Augmentations:** Only normalization is applied.
-
-- **Additional Techniques:**  
-  Future work could explore dropout or weight decay for additional regularization.
+*   **Data Augmentation:** Applied extensively during training (details in Section 6), especially in Part 3 (including ColorJitter, RandAugment).
+*   **Pretrained Weights (Parts 2 & 3):** Using ImageNet pretrained weights acts as a strong prior, guiding the model towards generalizable features.
+*   **Validation Set & Early Stopping (Part 2 & potentially Part 3):** Training progress was monitored on a validation set. Part 2 explicitly used early stopping (patience=10). Part 3 saved the best model based on validation accuracy and had an early stopping mechanism (patience=10), preventing overfitting by selecting the optimal checkpoint.
+*   **Normalization:** Standardizing input data (`transforms.Normalize`) using appropriate statistics (generic for Part 1, ImageNet for Parts 2 & 3) stabilized training.
+*   **Weight Decay (L2 Regularization):** Applied via the AdamW optimizer (1e-4) in Parts 2 and 3 to penalize large weights.
+*   **Dropout:** Added to the classifier head in Part 2 (ResNet-50) with p=0.5.
+*   **MixUp (Part 2):** Linearly interpolated pairs of images and their labels during training, encouraging linear behavior between samples.
+*   **Label Smoothing (Part 3):** Reduced the confidence of the model in its target labels during training by softening the one-hot encoded targets, preventing overconfident predictions.
+*   **Learning Rate Scheduling:** Cosine Annealing (Parts 2 & 3) provided a smooth decay, aiding convergence to better minima.
 
 ---
 
 ## 6. Data Augmentation Strategy
 
-### Training Transforms:
-```python
-transform_train = transforms.Compose([
-    transforms.RandomCrop(32, padding=4),
-    transforms.RandomHorizontalFlip(),
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-])
-```
+Augmentations were applied only to the training datasets.
+
+*   **Part 1 (SimpleCNN):**
+    *   `transforms.RandomCrop(32, padding=4)`
+    *   `transforms.RandomHorizontalFlip()`
+    *   `transforms.ToTensor()`
+    *   `transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))` (Generic)
+*   **Part 2 (ResNet-50 - `part2_improved.py`):**
+    *   (Input is PIL)
+    *   `transforms.RandomCrop(32, padding=4)`
+    *   `transforms.RandomHorizontalFlip()`
+    *   `transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)`
+    *   `transforms.RandomRotation(10)`
+    *   `transforms.ToTensor()`
+    *   `transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])` (ImageNet)
+*   **Part 3 (EfficientNet-B0 - `part3.py - UPDATED`):**
+    *   (Input is PIL)
+    *   `transforms.Resize(256)`
+    *   `transforms.RandomResizedCrop(224)`
+    *   `transforms.RandomHorizontalFlip()`
+    *   `transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1)`
+    *   `transforms.RandAugment(num_ops=2, magnitude=9)`
+    *   `transforms.ToTensor()`
+    *   `transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])` (ImageNet)
+
+**Test/Validation Transforms:**
+*   Part 1: `ToTensor`, `Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))`
+*   Part 2: `ToTensor`, `Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])`
+*   Part 3: `Resize(256)`, `CenterCrop(224)`, `ToTensor`, `Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])`
+
+**Justification:** Standard augmentations (crop, flip) were used initially. Parts 2 and 3 used ImageNet normalization statistics crucial for pretrained models. Part 3 employed more advanced augmentations (ColorJitter, RandAugment) and input resizing suitable for EfficientNet to maximize performance. Test transforms are minimal to provide a consistent evaluation.
+
+---
+
 ## 7. Results Analysis
 
+Performance was evaluated on the local CIFAR-100 test set (clean accuracy) and the Kaggle OOD dataset (leaderboard score).
+
 ### Part 1 – SimpleCNN
-- **Performance:**  
-  - Local Test Accuracy: **[21.34%]**
-  - Kaggle Leaderboard Score: **[0.19720]**
-- **Strengths:**
-  - Simple architecture with minimal parameters, making it easy to train and understand.
-  - Serves as a clear baseline for further experimentation.
-- **Weaknesses:**
-  - Limited capacity to capture complex image features.
-  - Lower performance on out-of-distribution (OOD) data compared to more sophisticated models.
 
-### Part 2 – Sophisticated CNN (Pretrained ResNet-18)
-- **Performance:**  
-  - Achieved a test accuracy of approximately **[0.20717]%** on CIFAR-100.
-  - Local Test Accuracy: **[42.54%]**
-- **Strengths:**
-  - Transfer learning leverages robust features learned from ImageNet.
-  - Residual connections enable deeper network training and improved convergence.
-  - Better generalization than the SimpleCNN baseline.
-- **Weaknesses:**
-  - Requires higher computational resources.
-  - Some signs of overfitting were observed, necessitating careful tuning of regularization and early stopping strategies.
-  - Early stopped on **[23]th epoch**
-  
+*   **Local Test Accuracy:** `29.28%`
+*   **Kaggle Leaderboard Score:** `0.19720` (`submission_ood_simple_cnn.csv`)
+*   **Analysis:**
+    *   Strengths: Simple baseline, verified pipeline.
+    *   Weaknesses: Low accuracy, poor OOD performance, clearly insufficient capacity. Underfitting.
 
-### Part 3 – Transfer Learning & Fine-Tuning
-- **Performance:**  
-  - Achieved a test accuracy of approximately **[Z]%** on CIFAR-100, outperforming the baseline models.
-  - Local Test Accuracy: **[79%]**
-- **Strengths:**
-  - Fine-tuning the pretrained ResNet-18 allows the model to adapt specifically to CIFAR-100.
-  - Effective use of data augmentation and early stopping enhances robustness and mitigates overfitting.
-  - Improved handling of OOD data compared to Parts 1 and 2.
-- **Weaknesses:**
-  - Some OOD distortions remain challenging.
-  - Further hyperparameter optimization and additional regularization (e.g., dropout or weight decay) may yield incremental gains.
+### Part 2 – Sophisticated CNN (ResNet-50)
+
+*   **Local Test Accuracy:** `38.87%`
+*   **Kaggle Leaderboard Score:** `0.29504` (`submission_ood_part2_fixed.csv`)
+*   **Early Stopping Epoch:** Best model saved around Epoch `97` (training stopped after 100 or earlier due to patience=10)
+*   **Analysis:**
+    *   Strengths: Significant improvement over SimpleCNN due to pretraining and deeper architecture (ResNet50). Use of AdamW, Cosine Annealing, MixUp, and Dropout shows application of modern techniques.
+    *   Weaknesses: The final accuracy (38.87% local, 0.295 Kaggle) is lower than might be expected for ResNet50 on CIFAR-100, even with fine-tuning. This could potentially be due to the very low learning rate (1e-4) hindering faster convergence or suboptimal interaction between the chosen hyperparameters (e.g., weight decay, MixUp alpha). OOD performance improved but still lags significantly behind Part 3.
+
+### Part 3 – Transfer Learning & Fine-Tuning (EfficientNet-B0)
+
+*   **Local Test Accuracy:** `82.3%`
+*   **Kaggle Leaderboard Score:** `0.61255` (`submission_ood_part3.csv` / `submission_ood_best_model_eval.csv`)
+*   **Benchmark Comparison:** This score **did** beat the benchmark of 0.397.
+*   **Analysis:**
+    *   Strengths: Achieved the highest accuracy by a large margin. Successfully leveraged EfficientNet-B0's efficiency and performance with extensive augmentation (RandAugment, ColorJitter), appropriate ImageNet transforms, AdamW, Cosine Annealing, Label Smoothing, and a suitable fine-tuning LR. Successfully surpassed the required benchmark.
+    *   Weaknesses: Requires more computational resources due to larger input size (224x224) and advanced augmentations. While achieving a good OOD score, there's still a gap compared to clean accuracy, indicating vulnerability to domain shift.
+
+### Leaderboard Performance Summary
+
+| Part    | Model             | Kaggle Score | Submission File                     | Kaggle Username    |
+| :------ | :---------------- | :----------- | :---------------------------------- | :----------------- |
+| Part 1  | SimpleCNN         | `0.19720`    | `submission_ood_simple_cnn.csv`    | `zhamshidbekabdul` |
+| Part 2  | ResNet-50         | `0.29504`    | `submission_ood_part2_fixed.csv`   | `zhamshidbekabdul` |
+| Part 3  | EfficientNet-B0   | `0.61255`    | `submission_ood_best_model_eval.csv` | `zhamshidbekabdul` |
+| *Best Overall* | *EfficientNet-B0* | *`0.61255`*  | *`submission_ood_best_model_eval.csv`* | *`zhamshidbekabdul`* |
 
 ---
 
 ## 8. Experiment Tracking Summary
 
-- **Tool:**  
-  Experiments were tracked using **Weights & Biases (WandB)**.
+*   **Tool Used:** Weights & Biases (WandB).
+*   **Setup:** Used starter code instrumentation. Logged runs to `sp25-ds542-challenge-part1`, `sp25-ds542-challenge-part2-improved`, and `sp25-ds542-challenge-part3`.
+*   **Metrics Logged:** Configuration parameters (LR, batch size, optimizer, etc.), train/val loss, train/val accuracy, learning rate schedule, model gradients/parameters. Best model checkpoints saved.
+*   **Insights Gained:** WandB was essential for visualizing convergence, comparing train/val curves to assess overfitting, observing the impact of LR scheduling and regularization techniques (MixUp, Label Smoothing, Augmentations), and selecting the best performing model based on validation accuracy.
+*   **WandB Summary/Screenshots:**
 
-- **Metrics Logged:**
-  - **Training Metrics:** Loss and accuracy per epoch.
-  - **Validation Metrics:** Loss and accuracy per epoch.
-  - **Learning Rate Progression:** Monitored via a step scheduler.
-  - **Model Checkpoints:** Saved best-performing models based on validation accuracy.
+    **Part 1: SimpleCNN**
+    ![SimpleCNN WandB](screenshots/1simpleCNN.png)
 
-- **Run Summary:**
-  - Detailed logs for each run, including hyperparameters such as batch size, learning rate, and epoch counts.
-  - The WandB dashboard provides visualizations of training and validation metrics over time.
-  - Example link to a run: [WandB Run Link](https://wandb.ai/your_username/your_project/runs/your_run_id) *(replace with actual URL)*.
+    **Part 2: ResNet-50** (`part2_improved.py` run)
+    ![ResNet50 WandB](screenshots/ResNet50.png)
 
-- **Observations:**
-  - Transfer learning in Parts 2 and 3 resulted in faster convergence and higher test accuracy compared to the SimpleCNN.
-  - Early stopping was effective in preventing overfitting, as seen by the stabilization of validation loss.
-  - Fine-tuning (Part 3) further improved performance, highlighting the benefits of adapting pretrained weights to the specific dataset.
+    *(Self-Correction: The ResNet-18 screenshot is likely from an older run before switching to ResNet-50; the ResNet-50 screenshot reflects the results reported for Part 2)*
+
+    **Part 3: EfficientNet-B0** (`part3.py - UPDATED` run)
+    ![EfficientNet_B0 WandB](screenshots/efficientNetB0.png)
+
+    *   **Link to Best Run (Part 3):** [https://wandb.ai/bulkhamid-boston-university/sp25-ds542-challenge-part3/runs/j3lvjgku?nw=nwuserbulkhamid](https://wandb.ai/bulkhamid-boston-university/sp25-ds542-challenge-part3/runs/j3lvjgku?nw=nwuserbulkhamid)
 
 ---
 
 ## 9. Conclusion
 
-This project explored three approaches for CIFAR-100 classification:
+This project successfully implemented and evaluated CNN models for CIFAR-100, demonstrating the progression from a simple baseline to advanced transfer learning techniques.
 
-- **Part 1:**  
-  A manually implemented SimpleCNN established a baseline.
-  
-- **Part 2:**  
-  A pretrained ResNet-18 model was adapted for CIFAR-100, significantly improving performance through transfer learning.
-  
-- **Part 3:**  
-  Fine-tuning the pretrained ResNet-18 with advanced data augmentation and early stopping achieved the best results.
+*   **Part 1 (SimpleCNN)** provided a low baseline (`0.19720` Kaggle score), confirming the need for more complex models.
+*   **Part 2 (ResNet-50)** showed improvement (`0.29504` Kaggle score) using a deeper pretrained model and techniques like AdamW, MixUp, and Cosine Annealing, although results suggest potential for further hyperparameter tuning (especially LR).
+*   **Part 3 (EfficientNet-B0)** achieved the best performance (`0.61255` Kaggle score), successfully surpassing the 0.397 benchmark. This highlights the effectiveness of combining a strong pretrained architecture with aggressive data augmentation (RandAugment), appropriate normalization, label smoothing, and careful fine-tuning using AdamW and Cosine Annealing.
 
-**Summary of Findings:**
-- The best performance was observed in Part 3, demonstrating that combining transfer learning with careful fine-tuning and regularization leads to improved accuracy.
-- Regularization techniques like early stopping and data augmentation were key in reducing overfitting.
-- Experiment tracking with WandB provided crucial insights into model performance and hyperparameter tuning.
+**Key Findings:**
+*   Transfer learning is crucial for achieving good performance on CIFAR-100.
+*   Modern architectures (EfficientNet) combined with appropriate fine-tuning strategies (AdamW, Cosine LR, ImageNet stats, advanced augmentations, label smoothing) yield superior results.
+*   Careful hyperparameter selection (especially learning rate) and regularization are critical. The relatively lower performance in Part 2 might indicate that the chosen LR or combination of techniques wasn't optimal for ResNet-50 in this setup.
+*   WandB is indispensable for monitoring, comparing, and debugging experiments.
 
 **Future Directions:**
-- Investigate additional regularization techniques such as dropout and weight decay.
-- Experiment with deeper or alternative architectures (e.g., ResNet-34, DenseNet).
-- Conduct ablation studies to further quantify the impact of each augmentation and hyperparameter choice.
-
+*   **Tune Part 2:** Revisit ResNet-50 with potentially a slightly higher initial LR or different optimizer settings to improve its baseline.
+*   **Hyperparameter Optimization (Part 3):** Use WandB Sweeps to systematically explore LR, weight decay, RandAugment magnitude, and label smoothing factor for potentially further gains on EfficientNet-B0.
+*   **Explore Other Models:** Test larger EfficientNet variants (B1-B7) or other architectures like Vision Transformers (ViT - although explicitly excluded by initial instructions) or ConvNeXt if resources permit.
+*   **Ensemble Methods:** Combine predictions from the best models (e.g., ResNet-50 and EfficientNet-B0) to potentially improve robustness and accuracy.
+*   **OOD Robustness:** Investigate techniques specifically designed to improve performance on distorted images.
